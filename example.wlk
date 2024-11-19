@@ -1,7 +1,7 @@
 class Filosofo {
   const nombre
-  var edad
-  var dias = 0
+  //var edad
+  var dias 
   const actividades = []
   const honorificos = []  // conjunto de títulos que describen perfectamente la esencia del filósofo
 
@@ -17,13 +17,19 @@ class Filosofo {
     nivelDeIluminacion += cantidad
   }
   
-  method edad() = edad
+  //method edad() = edad
 
-  method rejuvenecer(cantidad) { edad -= cantidad}
+  method dias() = dias
+  method rejuvenecer(cantidad) { dias -= cantidad}
+  method envejecer(cantidad) { dias += cantidad}
+  method edad() = dias.div(365)
+  method esElCumpleanito() = dias % 365 == 0  // los dias es divisible por 365
 
   method agregarHonorifico(honorifico) {
     honorificos.add(honorifico)
   }
+
+  method tieneHonorifico(honorifico) = honorificos.contains(honorifico)
 
   // 1) Pedirle a un filosofo que se presente...
   method presentarse() = nombre + self.honorificosSeparadosPorComa()
@@ -38,6 +44,13 @@ class Filosofo {
     actividad.hacer(self)
   }
 
+  // Estas actividades son bastante variadas, y todos los días se inventan más y más
+
+  // POR ESA RAZON NO PUEDEN SER METODOS!!
+  // ADEMAS CUANDO REALIZO EL METODO DE REALIZAR TODAS LAS ACTIVIDADES, REALIZO TODAS LAS QUE TENGO EN LA LISTA
+  // SINO DEBERIA IR INCLUYENDO UNA POR UNA CUANDO APAREZCA UNA NUEVA ACTIVIDAD!!
+
+  /*
   method tomarVino() {
     self.disminuirNivelDeIluminacion(10)
     self.agregarHonorifico("el borracho")
@@ -56,23 +69,27 @@ class Filosofo {
   method practicarUnDeporte(deporte) {
     self.rejuvenecer(deporte.cantidadParaRejuvenecer()) // le paso la pelota al deporte
   }
+  */
 
   // Los filosofos tambien envejecen:
 
-  method envejecerUnDia() {
-    dias += 1
-    if(dias == 365) self.envejecer()
+  method pasajeDelTiempo() {
+    self.envejecer(1)
   }
 
-  method envejecer() {
-    edad += 1
-    self.aumentarNivelDeIluminacion(10)
-    if(edad == 60) self.agregarHonorifico("el sabio ")
+  method verificarCumpleanito() {
+    if(self.esElCumpleanito()) self.aumentarNivelDeIluminacion(10)
+    self.verificarJubilacion()
+  }
+
+  method verificarJubilacion(){
+    if(self.edad() == 60) self.agregarHonorifico("el sabio ")
   }
 
   // 3) Hacer que un filósofo viva un día. Esto implica realizar todas sus actividades y 
   // el pasaje del tiempo que afecta al sujeto.
 
+  /*
   method vivirUnDia(otroFilosofo, cascada, deporte) {
     self.realizarTodasLasActividades(otroFilosofo, cascada, deporte)
     self.envejecerUnDia()
@@ -84,6 +101,16 @@ class Filosofo {
     self.admirarElPaisaje()
     self.meditarBajoUnaCascada(cascada)
     self.practicarUnDeporte(deporte)
+    // OTRAS...
+
+    // ESTO ESTARIA MAL, CADA VEZ QUE AGREGUE UN METODO, LO TENGO QUE AGREGAR ACA, NO SERIA ESCALABLE MI CODIGO!!
+  }
+  */
+
+  method vivirUnDia(){
+    self.realizarActividades()    // realizo las actividades
+    self.pasajeDelTiempo()        // paso un dia (es decir, envejece un dia +1)
+    self.verificarCumpleanito()   // chequeo si es un cumple!! (dentro chequeo su jubilacion)
   }
 
   method realizarActividades() {
@@ -93,33 +120,69 @@ class Filosofo {
 }
 
 // Algunos filosofos..
-const diogenes = new Filosofo(nombre = "Diogenes: ", edad = 40, actividades = [], honorificos = ["el cinico "])
-const confusio = new Filosofo(nombre = "Confusio: ", edad = 40, actividades = [], honorificos = ["el sabio ", "maestro "])
 
-// ACTIVIDADES COMO OBJETOS
 
-object tomarVinoV2 {
+// ACTIVIDADES COMO OBJETOS 
+// Estas actividades son bastante variadas, y todos los días se inventan más y más
+
+object tomarVino {
     method hacer(filosofo){
       filosofo.disminuirNivelDeIluminacion(10)
-      filosofo.agregarHonorifico("el borracho")
+      filosofo.agregarHonorifico("el borracho ")
     }
   }
 
+class JuntarseEnElAgora {
+  const otroFilosofo
+
+  method hacer(filosofo) {
+    filosofo.aumentarNivelDeIluminacion(otroFilosofo.nivelDeIluminacion() / 10)
+  }
+}
+
+object admirarElPaisaje {
+  method hacer(filosofo){
+    // No hace nada realmente!!
+  }
+}
+
+class MeditarBajoUnaCascada {
+  const cascada
+
+  method hacer(filosofo) {
+    filosofo.aumentarNivelDeIluminacion(10 * cascada.metros())
+  }
+}
+
+class PracticarUnDeporte {
+  const deporte
+
+  method hacer(filosofo) {
+    filosofo.rejuvenecer(deporte.cantidadParaRejuvenecer()) // le paso la pelota al deporte
+  }
+}
 
 // PUNTO 6 -- NUEVOS FILOSOFOS
 
 class FilosofoContemporaneo inherits Filosofo {
 
   override method presentarse() = "hola".toString()
+
+  // Su nivel de iluminación es el mismo a menos que ame admirar el paisaje, en cuyo caso se quintuplica.
+  override method nivelDeIluminacion() = super() * self.coeficienteIluminacion()
+
+  method coeficienteIluminacion() = if(self.amaAdmirarElPaisaje()) 5 else 1
+  method amaAdmirarElPaisaje() = actividades.contains(admirarElPaisaje)
 }
 
-
+// CASCADA
 class Cascada {
   const metros
   
   method metros() = metros
 }
 
+// DEPORTES
 object futbol {
   method cantidadParaRejuvenecer() = 1
 }
@@ -132,12 +195,20 @@ object waterpolo {
   method cantidadParaRejuvenecer() = polo.cantidadParaRejuvenecer() * 2
 }
 
+// DISCUSION
 class Discusion {
   const argumentos = [] // toda discusion esta compuesta por argumentos
-
-  method discutir(unPartido, otroPartido)
-
+  const unPartido
+  const otroPartido
+  
   // 5) Discusion es buena?
+
+  method esBuena() = unPartido.esBueno() and otroPartido.esBueno()
+
+  /*
+
+  DEMASIADA REPETICION DE LOGICA, SIMPLEMENTE PUEDE DELEGAR Y YA TA
+
   method esBuena(unPartido, otroPartido) = 
     self.argumentosPresentadosBuenos(unPartido, otroPartido) and self.ambosFilosofosEstanEnLoCorrecto(unPartido, otroPartido)
 
@@ -146,6 +217,7 @@ class Discusion {
 
   method ambosFilosofosEstanEnLoCorrecto(unPartido, otroPartido) =
     unPartido.suFilosofoEstaEnloCorrecto() and otroPartido.suFilosofoEstaEnloCorrecto()
+  */
 
 }
 
@@ -154,7 +226,7 @@ class Argumento {     // Todo argumento tiene una descripción y una naturaleza
   const naturaleza
 
   method cantidadPalabras() = descripcion.words()
-  method terminaEnUnSignoDePregunta() = descripcion.last("?")
+  method esPregunta() = descripcion.last("?") // descripcion.endsWith("?")
 
   // 4) Saber si un argumento es enriquecedor.
   method esEnriquecedor() = naturaleza.enriquece(self)   // La naturaleza de un argumento determina la intención con la cual se usan sus palabras y si enriquecen la discusión.
@@ -171,7 +243,7 @@ object moralista {
 }
 
 object esceptica {
-  method enriquece(argumento) = argumento.terminaEnUnSignoDePregunta()
+  method enriquece(argumento) = argumento.esPregunta()
 }
 
 object cinica {
@@ -190,10 +262,14 @@ class Partido { // cada partido está compuesto por un único filósofo (y sus a
   const filosofo
   const property argumentos = []
 
-  method argumentosEnriquecedoresMitad() = self.cantArgumentosEnriquecedores() >= (self.cantArgumentos() / 2)
+  method esBueno() = self.suFilosofoEstaEnloCorrecto() and self.tieneBuenosArgumentos()
+
+  // al menos el 50% de los argumentos presentados son enriquecedores 
+  method tieneBuenosArgumentos() = self.cantArgumentosEnriquecedores() >= (self.cantArgumentos() / 2)
 
   method cantArgumentos() = argumentos.size()
-  method cantArgumentosEnriquecedores() = argumentos.contains({argumento => argumento.esEnriquecedor()})
+
+  method cantArgumentosEnriquecedores() = argumentos.count({argumento => argumento.esEnriquecedor()})
 
   method suFilosofoEstaEnloCorrecto() = filosofo.estaEnLoCorrecto()
 

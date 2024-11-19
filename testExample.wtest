@@ -1,1 +1,18 @@
 import example.*
+
+describe "Test de realizacion de actividades" {
+    const diogenes = new Filosofo(nombre = "Diogenes: ", dias = 7300, actividades = [tomarVino], honorificos = ["el cinico "])
+    const confusio = new Filosofo(nombre = "Confusio: ", dias = 7300, actividades = [new PracticarUnDeporte(deporte = futbol)], honorificos = ["el sabio ", "maestro "])
+  test "Al pasar un dia en la vida de diogenes, este sera conocido como el borracho, se disminute su nivel de iluminacion y habra envejecido" {
+    diogenes.vivirUnDia()
+    assert.equals(-10, diogenes.nivelDeIluminacion())
+    assert.that(diogenes.dias() > 7300)
+    assert.equals(7301, diogenes.dias())
+    assert.that(diogenes.tieneHonorifico("el borracho "))
+  }
+
+  test "Al pasar un dia en la vida de confusio, este no envejece (porque envejece por el paso del dia, pero rejuvenece por practicar futbol)" {
+    confusio.vivirUnDia()
+    assert.equals(7300, confusio.dias())
+  }
+}
